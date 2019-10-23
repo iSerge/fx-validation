@@ -1,0 +1,3 @@
+rootProject.name = 'fx-validation'
+
+include 'samples'

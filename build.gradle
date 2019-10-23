@@ -1,0 +1,37 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+version = '0.3'
+
+javafx {
+    version = "13"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Declarative define validation rules for JavaFX UI controls',
+                   'Implementation-Version': project.version
+    }
+}
+
+dependencies {
+    compileOnly 'org.jetbrains:annotations:17.0.0'
+
+    api files('libs/aeFXActions-0.2.0.jar')
+}
+
+wrapper {
+    gradleVersion = '5.6.3'
+}
+
