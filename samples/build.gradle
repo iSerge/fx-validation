@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+version = '0.3'
+mainClassName = "com.aeonium.aefxvalidationtest.AeFXValidationI18NTest"
+
+javafx {
+    version = "13"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Simulation of Bragg X-ray diffraction in crystalline structures',
+                'Implementation-Version': project.version,
+//                   'Class-Path': configurations.runtime.collect { it.getName() }.join(' '),
+                'Main-Class': mainClassName
+    }
+}
+
+
+test {
+    useJUnitPlatform()
+}
+
+dependencies {
+    implementation project(':')
+
+    testImplementation files('libs/fx-unit-1.0.0-SNAPSHOT.jar')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+}
