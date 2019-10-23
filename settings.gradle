@@ -1,3 +1,18 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        jcenter()
+        google()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'org.openjfx.javafxplugin') {
+                useVersion('0.0.8')
+            }
+        }
+    }
+}
+
 rootProject.name = 'fx-validation'
 
 include 'samples'
