@@ -22,15 +22,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TitledPane;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 
 /**
@@ -114,9 +113,19 @@ public class LabelService {
       NODES_TO_SCENE_MAP.put(scene, list);
     }
 
-    findLabels(scene, root.getChildrenUnmodifiable(), list);
+    if (root instanceof Accordion) {
+      Accordion accordion = (Accordion) root;
+      ObservableList<Node> children = FXCollections.observableArrayList(accordion.getPanes());
+      findLabels(scene, children, list);
+    } else {
+      findLabels(scene, root.getChildrenUnmodifiable(), list);
+    }
 
     List<Label> labelList = LABELS_FOR_SCENE_MAP.get(scene);
+    if (null == labelList) {
+      System.err.println("No labels found for control validation");
+      return;
+    }
     for (Label label : labelList) {
       final Node labelFor = label.getLabelFor();
       if (labelFor != null) {
@@ -179,6 +188,10 @@ public class LabelService {
 
           findLabels(parent.getChildrenUnmodifiable(), list);
         }
+      } else if (node instanceof Accordion) {
+        Accordion accordion = (Accordion) node;
+        ObservableList<Node> containedPanes = FXCollections.observableArrayList(accordion.getPanes());
+        findLabels(containedPanes, list);
       }
     }
   }
@@ -233,6 +246,13 @@ public class LabelService {
 
           findLabels(scene, parent.getChildrenUnmodifiable(), list);
         }
+      } else if (node instanceof Accordion) {
+        Accordion accordion = (Accordion) node;
+        ObservableList<Node> containedPanes = FXCollections.observableArrayList(accordion.getPanes());
+        findLabels(scene, containedPanes, list);
+      } else if (node instanceof ScrollPane) {
+        ScrollPane scroll = (ScrollPane) node;
+        findLabels(scene, FXCollections.observableArrayList(scroll.getContent()), list);
       }
     }
   }
