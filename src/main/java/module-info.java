@@ -4,7 +4,7 @@ module javafx.validations {
     requires javafx.controls;
     requires javafx.fxml;
 
-    requires aeFXActions;
+    requires transitive aeFXActions;
 
     exports com.aeonium.javafx.validation;
     exports com.aeonium.javafx.validation.annotations;

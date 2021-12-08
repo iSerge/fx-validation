@@ -1,13 +1,13 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        jcenter()
+        mavenCentral()
         google()
     }
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id == 'org.openjfx.javafxplugin') {
-                useVersion('0.0.8')
+                useVersion('0.0.10')
             }
         }
     }
