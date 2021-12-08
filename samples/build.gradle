@@ -8,13 +8,13 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = 1.11
-targetCompatibility = 1.11
-version = '0.3'
+sourceCompatibility = 1.17
+targetCompatibility = 1.17
+version = '0.4'
 mainClassName = "com.aeonium.aefxvalidationtest.AeFXValidationI18NTest"
 
 javafx {
-    version = "13"
+    version = "17"
     modules = [ 'javafx.controls', 'javafx.fxml' ]
 }
 
