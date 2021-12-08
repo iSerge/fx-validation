@@ -64,7 +64,7 @@ public abstract class FXAbstractValidator<T extends Control, A extends Annotatio
    * validation.
    *
    */
-  protected List<EventType> eventTypes = new ArrayList<>();
+  protected List<EventType<?>> eventTypes = new ArrayList<>();
 
   /**
    * Validate the current data and/or state of control according to the
@@ -97,7 +97,7 @@ public abstract class FXAbstractValidator<T extends Control, A extends Annotatio
     this.validate(this.control, this.annotation);
   }
 
-  public List<EventType> getEventTypes() {
+  public List<EventType<?>> getEventTypes() {
     return eventTypes;
   }
 

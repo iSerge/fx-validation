@@ -93,7 +93,7 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
    */
   @Override
   public void handle(Object controller, Field field, Annotation validation) {
-    String name = null;
+    String name;
 
     try {
       name = this.getClassName(validation);
@@ -116,7 +116,7 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
         }
       }
 
-      FXAbstractValidator validator = (FXAbstractValidator) Class.forName(name).newInstance();
+      FXAbstractValidator<Control, Annotation> validator = (FXAbstractValidator) Class.forName(name).getDeclaredConstructor().newInstance();
       validator.setAnnotation(validation);
       validator.setControl(control);
 
@@ -126,16 +126,12 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
       // Registering control and controller - necessary for later binding
       ValidatorService.registerValidatedControl(controller, control);
 
-      List<EventType> eventTypes = validator.getEventTypes();
+      List<EventType<?>> eventTypes = validator.getEventTypes();
 
       // Common validation triggers: 
-      control.disabledProperty().addListener((observable, oldValue, newValue) -> {
-        doValidate(validator, control, validation);
-      });
+      control.disabledProperty().addListener((observable, oldValue, newValue) -> doValidate(validator, control, validation));
 
-      control.visibleProperty().addListener((observable, oldValue, newValue) -> {
-        doValidate(validator, control, validation);
-      });
+      control.visibleProperty().addListener((observable, oldValue, newValue) -> doValidate(validator, control, validation));
 
       control.focusedProperty().addListener((observable, oldValue, newValue) -> {
         // if control aquires focus: get out, only validate if focus lost.
@@ -147,29 +143,20 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
 
       // Specific validation triggers
       // Text-Input: use change events and focus changes
-      if (control instanceof TextInputControl) {
-        TextInputControl textInputControl = (TextInputControl) control;
+      if (control instanceof TextInputControl textInputControl) {
 
-        textInputControl.textProperty().addListener((observable, oldValue, newValue) -> {
-          doValidate(validator, control, validation);
-        });
+        textInputControl.textProperty().addListener((observable, oldValue, newValue) -> doValidate(validator, control, validation));
 
-      } else if (control instanceof ChoiceBox) {
-        ChoiceBox choiceBox = (ChoiceBox) control;
-        choiceBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-          doValidate(validator, control, validation);
-        });
+      } else if (control instanceof ChoiceBox<?> choiceBox) {
+        choiceBox.valueProperty().addListener((observable, oldValue, newValue) -> doValidate(validator, control, validation));
         choiceBox.showingProperty().addListener((observable, oldValue, newValue) -> {
           if (!newValue) {
             doValidate(validator, control, validation);
           }
         });
 
-      } else if (control instanceof ComboBoxBase) {
-        ComboBoxBase c = (ComboBoxBase) control;
-        c.valueProperty().addListener((observable, oldValue, newValue) -> {
-          doValidate(validator, control, validation);
-        });
+      } else if (control instanceof ComboBoxBase<?> c) {
+        c.valueProperty().addListener((observable, oldValue, newValue) -> doValidate(validator, control, validation));
         c.showingProperty().addListener((observable, oldValue, newValue) -> {
           if (!newValue) {
             doValidate(validator, control, validation);
@@ -182,9 +169,7 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
       for (EventType eventType : eventTypes) {
         // not a text input control: use key events from handlers list
         // TODO: validate concept - is this really reasonable/needed?
-        control.addEventHandler(eventType, (KeyEvent event) -> {
-          doValidate(validator, control, validation);
-        });
+        control.addEventHandler(eventType, (KeyEvent event) -> doValidate(validator, control, validation));
       }
 
       // pre-set validation to OK for disabled controls:
@@ -192,7 +177,9 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
         doValidate(validator, control, validation);
       }
 
-    } catch (ClassNotFoundException | IllegalArgumentException | IllegalAccessException | InstantiationException ex) {
+    } catch (ClassNotFoundException | IllegalArgumentException | IllegalAccessException
+            | InstantiationException | NoSuchMethodException | InvocationTargetException ex)
+    {
       Logger.getLogger(DefaultFXValidationHandler.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
@@ -209,9 +196,7 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
   public static void mark(Control control, boolean valid, String errormessage) {
     // TODO Make shure this runs on FX thread
     if (valid) {
-      if (control.getStyleClass().contains(ValidatorService.AEFX_VALIDATION_ERROR)) {
-        control.getStyleClass().remove(ValidatorService.AEFX_VALIDATION_ERROR);
-      }
+      control.getStyleClass().remove(ValidatorService.AEFX_VALIDATION_ERROR);
 
       List<Label> labels = LabelService.getLabelsFor(control);
 
@@ -258,7 +243,7 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
    * @param control The control
    * @param annotation The annotation
    */
-  private void doValidate(FXAbstractValidator validator, Control control, Annotation annotation) {
+  private void doValidate(FXAbstractValidator<Control,Annotation> validator, Control control, Annotation annotation) {
 //    System.out.println("doValidate " + control);
     try {
       validator.validate(control, annotation);
@@ -287,51 +272,46 @@ public class DefaultFXValidationHandler implements AnnotationHandler<Annotation>
 
   private String getClassName(Annotation validation) throws IllegalAccessException {
     String name = null;
-    if (validation instanceof FXRequired) {
-      FXRequired fXRequired = (FXRequired) validation;
+    if (validation instanceof FXRequired fXRequired) {
       try {
         Method method = fXRequired.getClass().getMethod("validation");
-        Class result = (Class) method.invoke(fXRequired, (Object[]) null);
+        Class<?> result = (Class<?>) method.invoke(fXRequired, (Object[]) null);
         name = result.getName();
       } catch (NoSuchMethodException | SecurityException | InvocationTargetException ex) {
         Logger.getLogger(DefaultFXValidationHandler.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-    } else if (validation instanceof FXString) {
-      FXString fXString = (FXString) validation;
+    } else if (validation instanceof FXString fXString) {
       try {
         Method method = fXString.getClass().getMethod("validation");
-        Class result = (Class) method.invoke(fXString, (Object[]) null);
+        Class<?> result = (Class<?>) method.invoke(fXString, (Object[]) null);
         name = result.getName();
       } catch (NoSuchMethodException | SecurityException | InvocationTargetException ex) {
         Logger.getLogger(DefaultFXValidationHandler.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-    } else if (validation instanceof FXNotNull) {
-      FXNotNull fXNotNull = (FXNotNull) validation;
+    } else if (validation instanceof FXNotNull fXNotNull) {
       try {
         Method method = fXNotNull.getClass().getMethod("validation");
-        Class result = (Class) method.invoke(fXNotNull, (Object[]) null);
+        Class<?> result = (Class<?>) method.invoke(fXNotNull, (Object[]) null);
         name = result.getName();
       } catch (NoSuchMethodException | SecurityException | InvocationTargetException ex) {
         Logger.getLogger(DefaultFXValidationHandler.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-    } else if (validation instanceof FXNumber) {
-      FXNumber fXNumber = (FXNumber) validation;
+    } else if (validation instanceof FXNumber fXNumber) {
       try {
         Method method = fXNumber.getClass().getMethod("validation");
-        Class result = (Class) method.invoke(fXNumber, (Object[]) null);
+        Class<?> result = (Class<?>) method.invoke(fXNumber, (Object[]) null);
         name = result.getName();
       } catch (NoSuchMethodException | SecurityException | InvocationTargetException ex) {
         Logger.getLogger(DefaultFXValidationHandler.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-    } else if (validation instanceof FXValidation) {
-      FXValidation fXValidation = (FXValidation) validation;
+    } else if (validation instanceof FXValidation fXValidation) {
       try {
         Method method = fXValidation.getClass().getMethod("validation");
-        Class result = (Class) method.invoke(fXValidation, (Object[]) null);
+        Class<?> result = (Class<?>) method.invoke(fXValidation, (Object[]) null);
         name = result.getName();
       } catch (NoSuchMethodException | SecurityException | InvocationTargetException ex) {
         Logger.getLogger(DefaultFXValidationHandler.class.getName()).log(Level.SEVERE, null, ex);
